@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบายมาน้อง</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300&display=swap');
+
+    /* ตั้งค่าพื้นหลังและฟอนต์ */
+    html{
+      background-color: antiquewhite;
+    }
+    .header {
+      overflow: hidden;
+      background-color: #face7c;
+      padding: 20px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .header a {
+      color: black;
+      text-align: center;
+      padding: 12px;
+      text-decoration: none;
+      font-size: 18px; 
+      line-height: 25px;
+      border-radius: 4px;
+    }
+
+    .header a.logo {
+      font-size: 25px;
+      font-weight: bold;
+    }
+    body {
+      margin: 0;
+      font-family: 'Kanit', sans-serif;
+      padding-bottom: 200px;
+    }
+
+    /* กล่องเนื้อหา */
+    .vn-content {
+      max-width: 800px;
+      margin: 80px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .question {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice-btn {
+      padding: 12px 16px;
+      background: #60a5fa;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .choice-btn:hover {
+      background: #3b82f6;
+    }
+
+    .textarea-box {
+      margin-top: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    .submit-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #fbbf24;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* กล่องสนทนาและมาสคอต */
+    .mascot-dialogue {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 10px;
+      z-index: 1000;
+    }
+
+    .mascot-img {
+      width: 450px;
+      transform: scaleX(-1);
+      object-fit: cover;
+      margin-right: 20px;
+      margin-left: 20px;
+      margin-bottom: 50px;
+    }
+
+    .dialogue-box {
+      background: #f0f9ff;
+      padding: 15px 20px;
+      border-radius: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 300px;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 100px;
+    }
+    
+    .skip-btn {
+      position: fixed;
+      bottom: 100px;
+      right: 50px;
+      padding: 10px 20px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
+    /* การแสดงวิดีโอ */
+    .video-container {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    
+    video {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+    <!-- ส่วนหัวของหน้า -->
+    <div class="header">
+        <a href="#default" class="logo">Shut up and take my MONEY!!</a>
+    </div>
+
+    <!-- กล่องเนื้อหาหลัก -->
+    <div class="vn-content">
+        <div class="question" id="questionText"></div> <!-- แสดงคำถาม -->
+        <div class="choices" id="choicesBox"></div> <!-- แสดงตัวเลือก -->
+
+        <!-- กล่องสำหรับเขียนข้อความ -->
+        <div class="textarea-box" id="writeBox" style="display:none;">
+            <label for="feelingText">เขียนระบายสิ่งที่อยากเล่า:</label>
+            <textarea id="feelingText" placeholder="พิมพ์อะไรก็ได้เลย"></textarea>
+            <button class="submit-btn" onclick="submitFeeling()">ส่งข้อความ</button>
+        </div>
+    </div>
+
+    <!-- กล่องสนทนาและมาสคอต -->
+    <div class="mascot-dialogue">
+        <img src="tralale tralala.png" alt="Mascot" class="mascot-img" />
+        <div class="dialogue-box" id="mascotSpeech"></div>
+    </div>
+
+    <!-- ปุ่มข้ามวิดีโอ -->
+    <button id="skipCutsceneBtn" class="skip-btn" style="display: none;" onclick="skipCutscene()">ข้าม</button>
+
+    <script>
+      // กำหนด flow ของเนื้อหา
+      const flow = [
+        {
+            question: "",
+            speech: "สวัสดี! ฉันชื่อ ZOE เอง ยินดีที่ได้รู้จักนะ!",
+            choices: [
+                { text: "ยินดีที่ได้รู้จัก!", next: 1 },
+            ],
+            isCutscene: true, // ระบุว่าเป็น cutscene
+        },
+        {
+          question: "วันนี้รู้สึกยังไงบ้างนะ?",
+          speech: "เรามาคุยกันหน่อยนะ!",
+          choices: [
+            { text: "รู้สึกดี", next: 2 },
+            { text: "เฉยๆ", next: 3 },
+            { text: "แย่หน่อย", next: 4 },
+          ]
+        },
+        {
+          question: "ว้าว! อะไรทำให้รู้สึกดีเหรอ?",
+          speech: "ดีใจที่วันนี้สดใสนะ!",
+          choices: [
+            { text: "เจอเพื่อนดีๆ", next: 5 },
+            { text: "ได้พักผ่อน", next: 5 },
+          ]
+        },
+        {
+          question: "เข้าใจเลย... อยากแชร์อะไรมั้ย?",
+          speech: "บางทีแค่ได้พูดก็ช่วยแล้วล่ะ",
+          choices: [
+            { text: "เหนื่อยนิดหน่อย", next: 5 },
+            { text: "ไม่แน่ใจเหมือนกัน", next: 5 },
+          ]
+        },
+        {
+          question: "เสียใจด้วยนะ อยากเล่าอะไรให้ฟังมั้ย?",
+          speech: "เราอยู่ตรงนี้เพื่อฟังนะ",
+          choices: [
+            { text: "อยากระบาย", next: "write" },
+            { text: "ขอเงียบๆ ดีกว่า", next: 5 },
+          ]
+        },
+        {
+          question: "ขอบคุณที่แบ่งปันนะ หวังว่าจะรู้สึกดีขึ้นแล้ว!",
+          speech: "เราจะอยู่ตรงนี้เสมอ :)",
+          choices: []
+        }
+      ];
+
+      let currentStep = 0; // เก็บสถานะปัจจุบัน
+
+      // ฟังก์ชันแสดงเนื้อหาแต่ละขั้นตอน
+      function renderStep(step) {
+        const q = flow[step];
+        document.getElementById("questionText").textContent = q.question;
+        document.getElementById("mascotSpeech").textContent = q.speech;
+        const choicesBox = document.getElementById("choicesBox");
+        const writeBox = document.getElementById("writeBox");
+        choicesBox.innerHTML = '';
+        writeBox.style.display = 'none';
+
+        if (q.isCutscene) {
+          document.getElementById("skipCutsceneBtn").style.display = "block";
+          
+          try {
+            // สร้าง container สำหรับวิดีโอ
+            const videoContainer = document.createElement("div");
+            videoContainer.className = "video-container";
+            
+            // สร้างวิดีโอ element
+            const video = document.createElement("video");
+            video.controls = false;
+            video.autoplay = true;
+            video.muted = false;
+            video.playsInline = true;
+            
+            // ตรวจสอบถ้าเบราว์เซอร์สนับสนุน webm
+            if (video.canPlayType('video/webm') === "probably" || 
+                video.canPlayType('video/webm') === "maybe") {
+              video.src = "videoplayback.webm";
+            } else {
+              // ถ้าไม่สนับสนุน webm ให้ใช้ mp4 แทน
+              video.src = "videoplayback.mp4";
+            }
+            
+            // เพิ่ม event listeners
+            video.addEventListener('error', function() {
+              console.error("วิดีโอโหลดไม่สำเร็จ:", video.error);
+              // แสดงข้อความแทนวิดีโอที่มีปัญหา
+              videoContainer.innerHTML = '<div style="padding: 40px; text-align: center; background: #f0f9ff; border-radius: 10px;"><h3>ไม่สามารถโหลดวิดีโอได้</h3><p>แต่ไม่ต้องกังวล เรายังคงสามารถคุยกันต่อได้!</p></div>';
+              
+              // แสดงปุ่มยินดีที่ได้รู้จักหลังจากไม่สามารถเล่นวิดีโอได้
+              setTimeout(() => {
+                const btn = document.createElement("button");
+                btn.className = "choice-btn";
+                btn.textContent = "ยินดีที่ได้รู้จัก!";
+                btn.onclick = () => {
+                  document.getElementById("skipCutsceneBtn").style.display = "none";
+                  currentStep = 1;
+                  renderStep(currentStep);
+                };
+                choicesBox.appendChild(btn);
+              }, 2000);
+            });
+            
+            video.addEventListener('ended', () => {
+              document.getElementById("skipCutsceneBtn").style.display = "none";
+              
+              // แสดงปุ่มตัวเลือกหลังวิดีโอจบ
+              const btn = document.createElement("button");
+              btn.className = "choice-btn";
+              btn.textContent = "ยินดีที่ได้รู้จัก!";
+              btn.onclick = () => {
+                currentStep = 1;
+                renderStep(currentStep);
+              };
+              choicesBox.appendChild(btn);
+            });
+            
+            // เพิ่มวิดีโอลงใน container
+            videoContainer.appendChild(video);
+            choicesBox.appendChild(videoContainer);
+            
+            // พยายามเล่นวิดีโอ
+            video.load();
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                console.error("เล่นวิดีโอไม่สำเร็จ:", error);
+                video.controls = true;
+                
+                setTimeout(() => {
+                  if (choicesBox.querySelector('.choice-btn') === null) {
+                    const btn = document.createElement("button");
+                    btn.className = "choice-btn";
+                    btn.textContent = "ยินดีที่ได้รู้จัก!";
+                    btn.onclick = () => {
+                      document.getElementById("skipCutsceneBtn").style.display = "none";
+                      currentStep = 1;
+                      renderStep(currentStep);
+                    };
+                    choicesBox.appendChild(btn);
+                  }
+                }, 3000);
+              });
+            }
+          } catch (e) {
+            console.error("เกิดข้อผิดพลาดในการสร้างวิดีโอ:", e);
+            const btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.textContent = "ยินดีที่ได้รู้จัก!";
+            btn.onclick = () => {
+              document.getElementById("skipCutsceneBtn").style.display = "none";
+              currentStep = 1;
+              renderStep(currentStep);
+            };
+            choicesBox.appendChild(btn);
+          }
+          
+          return;
+        }
+
+        q.choices.forEach(choice => {
+          const btn = document.createElement("button");
+          btn.className = "choice-btn";
+          btn.textContent = choice.text;
+          btn.onclick = () => {
+            if (choice.next === "write") {
+              writeBox.style.display = "block";
+              choicesBox.innerHTML = '';
+            } else {
+              currentStep = choice.next;
+              renderStep(currentStep);
+            }
+          };
+          choicesBox.appendChild(btn);
+        });
+      }
+
+      // ฟังก์ชันส่งข้อความ
+      function submitFeeling() {
+        const val = document.getElementById("feelingText").value.trim();
+        if (!val) {
+          alert("ลองพิมพ์สักนิดนะ :)");
+          return;
+        }
+        currentStep = 5;
+        renderStep(currentStep);
+      }
+
+      // ฟังก์ชันข้าม cutscene
+      function skipCutscene() {
+        document.getElementById("skipCutsceneBtn").style.display = "none";
+        currentStep = 1;
+        renderStep(currentStep);
+      }
+
+      // เริ่มต้นเมื่อโหลดหน้าเสร็จ
+      window.addEventListener('DOMContentLoaded', () => {
+        renderStep(currentStep);
+      });
+    </script>
+
+</body>
+</html>
